@@ -15,7 +15,7 @@
 
 
 //part two 
-// macro definitions (input pins found on MCB 1700 schematic)
+// macro definitions
 #define JOYSTICKNORTH 23
 #define JOYSTICKEAST 24
 #define JOYSTICKSOUTH 25 
@@ -37,19 +37,19 @@
 
 #if part == 1
 int main(void){
-	uint32_t currStatus; // set car for holding current status of switch
-	SystemInit(); // configure Clock and PLL
+	uint32_t currStatus; 
+	SystemInit(); 
 	
-	LPC_GPIO2->FIODIR =(0<<SWITCHPIN);// shift left by 10 and write 0 to that location
-	LPC_GPIO2->FIODIR =(1<<LEDPIN);// shift left by 6 and write 1 to that location
+	LPC_GPIO2->FIODIR =(0<<SWITCHPIN);
+	LPC_GPIO2->FIODIR =(1<<LEDPIN);
 	
-	while(true){ // keep looping forever
-		currStatus = (LPC_GPIO2->FIOPIN & (1<<SWITCHPIN)); // check to see if the switch is pressed or not
-		if(!currStatus){ // if switch is pressed
-			LPC_GPIO2->FIOSET |=(1<<LEDPIN); //set the bits using an OR to turn on the LED
+	while(true){ 
+		currStatus = (LPC_GPIO2->FIOPIN & (1<<SWITCHPIN)); 
+		if(!currStatus){ 
+			LPC_GPIO2->FIOSET |=(1<<LEDPIN); 
 		}
 		else{
-			LPC_GPIO2->FIOCLR =(1<<LEDPIN); //clear the output bit to 0
+			LPC_GPIO2->FIOCLR =(1<<LEDPIN); 
 		}
 	}
 }
@@ -60,19 +60,13 @@ int main(void){
 	
 	SystemInit(); 
 	
-	//pointing to block of registers for GPIO1 and output pins set in FIODIR (data direction resiter) to indicate that the pins are inputs
-
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKNORTH)); 
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKEAST));
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKSOUTH)); 
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKWEST)); 
 	
-	// infinite polling (keeps checking to see if data has been received)
 	while(true){
-		//FIOPIN used to read the pin 
-		//logical condition: check if the joystick is pressed or not 
 		if(!(LPC_GPIO1->FIOPIN>>JOYSTICKPRESS & MASK)){
-			//checking for each direction of the joystick and printing out the position
 			if(!(LPC_GPIO1->FIOPIN>>JOYSTICKNORTH & MASK)){
 				printf("%s\n", "Joystick Position: North and Pressed"); 
 			}
@@ -110,21 +104,18 @@ int main(void){
 }
 #elif part == 3
 int main(void){
-	//clearing the bits
 	LPC_GPIO1->FIODIR |= 0xB0000000;
 	LPC_GPIO2->FIODIR |= 0x0000007C;
 	
-	char input[100]; // set up a var to take the users input
-	int inputAsInt; // set up a var to store converted user input
-	int bitArray[8] = {0}; // array to store bits of 8 digit binary number
-	SystemInit(); // configure Clock and PLL
+	char input[100];
+	int inputAsInt;
+	int bitArray[8] = {0}; 
+	SystemInit();
 	
 
-	printf("Enter value from 0 to 255: "); // prompt for user to enter their desired number
-	scanf("%s", input); // registering input from user
+	printf("Enter value from 0 to 255: ");
+	scanf("%s", input);
 	
-	//checking to see if the input includes any letters using ANCII 
-	//implementation of isDigit() function which is not availble in C99
 	for (int j=0;j<strlen(input);j++){
 		int ANCII_number = (int) input[j];
 		if (ANCII_number>57 || ANCII_number<48) {
@@ -133,16 +124,13 @@ int main(void){
 		}
 	}
 	
-	//converting input into int 
 	inputAsInt = atoi(input);
-	
-	//checking to see if int is in range fro 8-bit conversion
+
 	if(inputAsInt < 0 || inputAsInt > 255){
 		printf("number out of range; choose between 0 and 255\n");
 		return EXIT_FAILURE;
 	}
 	
-	//itterating though preset bit array and setting bits based on remainder
 	int currPos = 0;
 	while(inputAsInt > 0) {
 		bitArray[currPos] = inputAsInt % 2;
@@ -150,7 +138,6 @@ int main(void){
 		currPos ++;
 	}
 	
-	//Setting LEDS based on status of bits in array
 	LPC_GPIO1->FIOSET = bitArray[0]<<LEDPIN0;
 	LPC_GPIO1->FIOSET = bitArray[1]<<LEDPIN1;
 	LPC_GPIO1->FIOSET = bitArray[2]<<LEDPIN2;
@@ -165,18 +152,13 @@ int main(void){
 // part 4 (ADC) 
 int main(void){
 	SystemInit(); 
-//initialization (setting bit 12/adc bit)
-	
+//initialization 	
 	LPC_SC->PCONP |= (MASK << 12); 
-	
-	//set the pin select register (as analog rather than GPIO)
-	//clear bit 
+
 	LPC_PINCON->PINSEL1 &= ~(0x03 << 18); 
 	LPC_PINCON->PINSEL1 |= (MASK << 18); 
 	
-	//set ADCR for correct input (potentiometer pin 2)
-	// using bits 8-15 as an 8 bit binrary # to represent the divisor 
-	//enable the adcr circuitry (enable bit = 21)
+
 	LPC_ADC->ADCR = (1 << 2)|(4 << 8)|(1 << 21);
 	
 // reading the adc 
@@ -187,7 +169,7 @@ int main(void){
 		LPC_ADC->ADCR |= (1 << 24);
 		
 		while ((LPC_ADC->ADGDR & 0x1000000000) != 0);
-		int adc_val = (LPC_ADC->ADGDR & (0xFFF << 4)) >> 4; // 4 bit shift to the right, & with bit mask 
+		int adc_val = (LPC_ADC->ADGDR & (0xFFF << 4)) >> 4; 
 		printf("Converted Value: %d\n", adc_val);
 	}
 
