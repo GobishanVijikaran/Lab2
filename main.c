@@ -6,7 +6,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define part 4 
+#define part 1
+
+//part one
+// macro definitions
+#define LEDPIN 6
+#define SWITCHPIN 10
+
+
 //part two 
 // macro definitions (input pins found on MCB 1700 schematic)
 #define JOYSTICKNORTH 23
@@ -17,8 +24,26 @@
 #define MASK 0x01
 
 
+#if part == 1
+int main(void){
+	uint32_t currStatus; // set car for holding current status of switch
+	SystemInit(); // configure Clock and PLL
+	LPC_GPIO2->FIODIR =(0<<SWITCHPIN);// shift left by 10 and write 0 to that location
+	LPC_GPIO2->FIODIR =(1<<LEDPIN);// shift left by 6 and write 1 to that location
+	
+	while(true){ // keep looping forever
+		currStatus = (LPC_GPIO2->FIOPIN & (1<<SWITCHPIN)); // check to see if the switch is pressed or not
+		if(!currStatus){ // if switch is pressed
+			LPC_GPIO2->FIOSET |=(1<<LEDPIN); //set the bits using an OR to turn on the LED
+		}
+		else{
+			LPC_GPIO2->FIOCLR =(1<<LEDPIN); //clear the output bit to 0
+		}
+	}
+}
+	
 
-#if part == 2
+#elif part == 2
 int main(void){
 	
 	SystemInit(); 
