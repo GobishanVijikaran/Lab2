@@ -1,11 +1,12 @@
-//Actually, some hint, it might be one of the lab demo questions to update the code right on the fly to turn on/off another LED
+
 //#define __O volatileoh 
 
 #include <lpc17xx.h>
-#include "stdio.h"
-#include "uart.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 
+#define part 4 
 //part two 
 // macro definitions (input pins found on MCB 1700 schematic)
 #define JOYSTICKNORTH 23
@@ -13,13 +14,17 @@
 #define JOYSTICKSOUTH 25 
 #define JOYSTICKWEST 26
 #define JOYSTICKPRESS 20
-#define MASK 0x1
+#define MASK 0x01
 
+
+
+#if part == 2
 int main(void){
 	
 	SystemInit(); 
 	
-	//pointing to block of registers for GPIO1 and output pins set in FIODIR (data direction resiter)
+	//pointing to block of registers for GPIO1 and output pins set in FIODIR (data direction resiter) to indicate that the pins are inputs
+
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKNORTH)); 
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKEAST));
 	LPC_GPIO1->FIODIR =((0<<JOYSTICKSOUTH)); 
@@ -43,7 +48,9 @@ int main(void){
 			else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKWEST & MASK)){
 				printf("%s\n", "Joystick Position: West and Pressed");
 			}
-			// add center positon 
+			else{
+				printf("%s\n", "Joystick Position: Center and Pressed");
+			}
 		}
 		else{
 			if(!(LPC_GPIO1->FIOPIN>>JOYSTICKNORTH & MASK)){
@@ -57,8 +64,45 @@ int main(void){
 			}
 			else if(!(LPC_GPIO1->FIOPIN>>JOYSTICKWEST & MASK)){
 				printf("%s\n", "Joystick Position: West and Not Pressed");
-			// add center positon 
+			}
+			else{
+				printf("%s\n", "Joystick Position: Center and Not Pressed");
 			}
 		}
 	}
 }
+
+
+#elif part == 4
+// part 4 (ADC) 
+int main(void){
+	SystemInit(); 
+//initialization (setting bit 12/adc bit)
+	
+	LPC_SC->PCONP |= (1 << 12); 
+	
+	//set the pin select register (as analog rather than GPIO)
+	//clear bit 
+	LPC_PINCON->PINSEL1 &= ~(0x03 << 18); 
+	LPC_PINCON->PINSEL1 |= (MASK << 18); 
+	
+	//set ADCR for correct input (potentiometer pin 2)
+	LPC_ADC->ADCR |= (1 << 2);
+	// using bits 8-15 as an 8 bit binrary # to represent the divisor 
+	LPC_ADC->ADCR |= (4 << 8);
+	//enable the adcr circuitry (enable bit = 21)
+	LPC_ADC->ADCR |= (1<<21); 
+	
+// reading the adc 
+	while(true){
+		//set bit 24 of the ADCR to start conversion 
+		LPC_ADC->ADCR |= (1 << 24); 
+		//waiting for bit 31 of the adgdr to indicate coversion complete 
+		while((LPC_ADC->ADCR & 0x1000000000) != 0);
+			// adgdr contains the converted value 
+		uint16_t ADGDR_val = (LPC_ADC->ADGDR>>4)&0xFFF; 
+		printf("Value: %d\n", ADGDR_val); 
+	}
+}
+
+#endif
