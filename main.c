@@ -1,4 +1,5 @@
-// Gobishan Vijikaran & Hunnain Atif
+// Gobishan Vijikaran ---- 20783081
+// Hunnain Atif ---------- 20780754
 
 #include <lpc17xx.h>
 #include <stdio.h>
