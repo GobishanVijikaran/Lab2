@@ -1,5 +1,4 @@
 // Gobishan Vijikaran & Hunnain Atif
-//#define __O volatileoh 
 
 #include <lpc17xx.h>
 #include <stdio.h>
@@ -7,7 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define part 3
+#define part 4
 
 //part one
 // macro definitions
@@ -168,7 +167,7 @@ int main(void){
 	SystemInit(); 
 //initialization (setting bit 12/adc bit)
 	
-	LPC_SC->PCONP |= (1 << 12); 
+	LPC_SC->PCONP |= (MASK << 12); 
 	
 	//set the pin select register (as analog rather than GPIO)
 	//clear bit 
@@ -176,22 +175,22 @@ int main(void){
 	LPC_PINCON->PINSEL1 |= (MASK << 18); 
 	
 	//set ADCR for correct input (potentiometer pin 2)
-	LPC_ADC->ADCR |= (1 << 2);
 	// using bits 8-15 as an 8 bit binrary # to represent the divisor 
-	LPC_ADC->ADCR |= (4 << 8);
 	//enable the adcr circuitry (enable bit = 21)
-	LPC_ADC->ADCR |= (1<<21); 
+	LPC_ADC->ADCR = (1 << 2)|(4 << 8)|(1 << 21);
 	
 // reading the adc 
-	while(true){
-		//set bit 24 of the ADCR to start conversion 
-		LPC_ADC->ADCR |= (1 << 24); 
-		//waiting for bit 31 of the adgdr to indicate coversion complete 
-		while((LPC_ADC->ADCR & 0x1000000000) != 0);
-			// adgdr contains the converted value 
-		uint16_t ADGDR_val = (LPC_ADC->ADGDR>>4)&0xFFF; 
-		printf("Value: %d\n", ADGDR_val); 
+	
+	while (true) {
+		
+		// begin conversion
+		LPC_ADC->ADCR |= (1 << 24);
+		
+		while ((LPC_ADC->ADGDR & 0x1000000000) != 0);
+		int adc_val = (LPC_ADC->ADGDR & (0xFFF << 4)) >> 4; // 4 bit shift to the right, & with bit mask 
+		printf("Converted Value: %d\n", adc_val);
 	}
+
 }
 
 #endif
