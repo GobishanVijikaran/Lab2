@@ -1,12 +1,13 @@
-
+// Gobishan Vijikaran & Hunnain Atif
 //#define __O volatileoh 
 
 #include <lpc17xx.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
-#define part 1
+#define part 3
 
 //part one
 // macro definitions
@@ -23,11 +24,23 @@
 #define JOYSTICKPRESS 20
 #define MASK 0x01
 
+//part three
+// macro definitions
+#define LEDPIN0 28
+#define LEDPIN1 29
+#define LEDPIN2 31
+#define LEDPIN3 2
+#define LEDPIN4 3
+#define LEDPIN5 4
+#define LEDPIN6 5
+#define LEDPIN7 6
+
 
 #if part == 1
 int main(void){
 	uint32_t currStatus; // set car for holding current status of switch
 	SystemInit(); // configure Clock and PLL
+	
 	LPC_GPIO2->FIODIR =(0<<SWITCHPIN);// shift left by 10 and write 0 to that location
 	LPC_GPIO2->FIODIR =(1<<LEDPIN);// shift left by 6 and write 1 to that location
 	
@@ -41,7 +54,7 @@ int main(void){
 		}
 	}
 }
-	
+
 
 #elif part == 2
 int main(void){
@@ -96,7 +109,58 @@ int main(void){
 		}
 	}
 }
+#elif part == 3
+int main(void){
+	//clearing the bits
+	LPC_GPIO1->FIODIR |= 0xB0000000;
+	LPC_GPIO2->FIODIR |= 0x0000007C;
+	
+	char input[100]; // set up a var to take the users input
+	int inputAsInt; // set up a var to store converted user input
+	int bitArray[8] = {0}; // array to store bits of 8 digit binary number
+	SystemInit(); // configure Clock and PLL
+	
 
+	printf("Enter value from 0 to 255: "); // prompt for user to enter their desired number
+	scanf("%s", input); // registering input from user
+	
+	//checking to see if the input includes any letters using ANCII 
+	//implementation of isDigit() function which is not availble in C99
+	for (int j=0;j<strlen(input);j++){
+		int ANCII_number = (int) input[j];
+		if (ANCII_number>57 || ANCII_number<48) {
+			printf("input has letters or is negative; choose number between 0 and 255\n");
+		  return EXIT_FAILURE;
+		}
+	}
+	
+	//converting input into int 
+	inputAsInt = atoi(input);
+	
+	//checking to see if int is in range fro 8-bit conversion
+	if(inputAsInt < 0 || inputAsInt > 255){
+		printf("number out of range; choose between 0 and 255\n");
+		return EXIT_FAILURE;
+	}
+	
+	//itterating though preset bit array and setting bits based on remainder
+	int currPos = 0;
+	while(inputAsInt > 0) {
+		bitArray[currPos] = inputAsInt % 2;
+		inputAsInt = inputAsInt / 2;
+		currPos ++;
+	}
+	
+	//Setting LEDS based on status of bits in array
+	LPC_GPIO1->FIOSET = bitArray[0]<<LEDPIN0;
+	LPC_GPIO1->FIOSET = bitArray[1]<<LEDPIN1;
+	LPC_GPIO1->FIOSET = bitArray[2]<<LEDPIN2;
+	LPC_GPIO2->FIOSET = bitArray[3]<<LEDPIN3;
+	LPC_GPIO2->FIOSET = bitArray[4]<<LEDPIN4;
+	LPC_GPIO2->FIOSET = bitArray[5]<<LEDPIN5;
+	LPC_GPIO2->FIOSET = bitArray[6]<<LEDPIN6;
+	LPC_GPIO2->FIOSET = bitArray[7]<<LEDPIN7;
+}
 
 #elif part == 4
 // part 4 (ADC) 
